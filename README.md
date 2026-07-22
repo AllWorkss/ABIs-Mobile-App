@@ -1,2 +1,35 @@
-# ABIs-Mobile-App
-ABIs Mobile App
+# ABIS Mobile App
+
+Free, low-cost Android wrapper for the ABIS web application at `https://allworkss.space`.
+
+## What this app does
+
+- Loads the existing ABIS SaaS web app in a secure Android WebView.
+- Supports Google OAuth redirects in the same WebView.
+- Supports Razorpay web checkout from the existing web payment flow.
+- Supports file upload from Android storage/camera providers.
+- Supports report/PDF downloads through Android Download Manager.
+- Shows a friendly offline screen when the phone has no internet.
+- Uses only free Android platform components; there are no paid mobile SDK dependencies.
+
+## Build
+
+```bash
+gradle :app:assembleDebug
+```
+
+For Play Store upload, generate a signed Android App Bundle from Android Studio or run:
+
+```bash
+gradle :app:bundleRelease
+```
+
+> Note: Play Store publishing still requires a Google Play Developer account.
+
+## App configuration
+
+- Package/application id: `com.allworkss.abis`
+- App name: `ABIS`
+- Website URL: `https://allworkss.space`
+- Min SDK: 23
+- Target SDK: 35
