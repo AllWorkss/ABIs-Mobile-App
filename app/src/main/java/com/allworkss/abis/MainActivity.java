@@ -22,7 +22,6 @@ import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.URLUtil;
-import android.webkit.WebBackForwardList;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -152,11 +151,6 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setGeolocationEnabled(false);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            settings.setSafeBrowsingEnabled(true);
-        }
 
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
@@ -168,14 +162,6 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return handleUrl(request.getUrl());
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                if (isOnline()) {
-                    offlineView.setVisibility(View.GONE);
-                    webView.setVisibility(View.VISIBLE);
-                }
             }
 
             @Override
@@ -218,16 +204,6 @@ public class MainActivity extends Activity {
         String scheme = uri.getScheme() == null ? "" : uri.getScheme();
         if (scheme.equals("http") || scheme.equals("https")) {
             return false;
-        }
-
-        if (scheme.equals("intent")) {
-            try {
-                Intent intent = Intent.parseUri(uri.toString(), Intent.URI_INTENT_SCHEME);
-                startActivity(intent);
-            } catch (Exception ignored) {
-                Toast.makeText(this, "Payment app not available", Toast.LENGTH_SHORT).show();
-            }
-            return true;
         }
 
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -295,11 +271,6 @@ public class MainActivity extends Activity {
     @Override
     public void onBackPressed() {
         if (webView != null && webView.canGoBack()) {
-            WebBackForwardList history = webView.copyBackForwardList();
-            if (history.getCurrentIndex() <= 0) {
-                super.onBackPressed();
-                return;
-            }
             webView.goBack();
         } else {
             super.onBackPressed();
