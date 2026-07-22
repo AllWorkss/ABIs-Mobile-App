@@ -12,16 +12,6 @@ Free, low-cost Android wrapper for the ABIS web application at `https://allworks
 - Shows a friendly offline screen when the phone has no internet.
 - Uses only free Android platform components; there are no paid mobile SDK dependencies.
 
-## Build status and preview
-
-To see how much of the Android app is complete and how to run it on a phone/emulator, read [`docs/BUILD_STATUS.md`](docs/BUILD_STATUS.md).
-
-Run the local build checker:
-
-```bash
-./scripts/check_android_build.sh
-```
-
 ## Build
 
 ```bash
