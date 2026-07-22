@@ -16,8 +16,7 @@ This repository contains a low-cost Android WebView app for ABIS. It is intended
    - Contact email: theallworkss@gmail.com
    - Privacy policy URL: your public privacy policy page.
 7. Complete the Data Safety form. This app loads the ABIS website and may process login, uploaded files, payments, and generated reports through the web backend.
-8. Configure Android App Links using `docs/ANDROID_APP_LINKS.md` so `https://allworkss.space` links can open the installed app.
-9. Test Google OAuth, Razorpay checkout, file upload, PDF report download, and offline/retry behavior on a real Android phone.
+8. Test Google OAuth, Razorpay checkout, file upload, PDF report download, and offline/retry behavior on a real Android phone.
 
 ## Free/low-cost notes
 
