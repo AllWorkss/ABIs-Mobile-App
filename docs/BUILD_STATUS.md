@@ -16,7 +16,6 @@ The Android app is currently a **WebView MVP** that reuses the live ABIS website
 | Offline UX | Done | User sees retry/settings screen when internet is unavailable. |
 | HTTPS-only policy | Done | Cleartext traffic is disabled in manifest and network security config. |
 | Play Store release docs | Done | Release checklist exists in `PLAY_STORE_RELEASE.md`. |
-| GitHub Actions debug APK | Done | Workflow builds and uploads a debug APK artifact when pushed to GitHub. |
 | Native UI rewrite | Not started | Optional future upgrade after MVP validation. |
 | Push notifications | Not started | Optional future upgrade. |
 | Native Razorpay SDK | Not started | Optional future upgrade; current build uses web checkout. |

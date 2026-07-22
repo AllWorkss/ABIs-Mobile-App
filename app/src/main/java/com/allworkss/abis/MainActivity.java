@@ -22,7 +22,6 @@ import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.URLUtil;
-import android.webkit.WebBackForwardList;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -37,8 +36,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Locale;
-
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private static final int STORAGE_PERMISSION_REQUEST = 1002;
@@ -47,12 +44,7 @@ public class MainActivity extends Activity {
     private WebView webView;
     private ProgressBar progressBar;
     private LinearLayout offlineView;
-    private LinearLayout loadingView;
     private ValueCallback<Uri[]> filePathCallback;
-    private String pendingDownloadUrl;
-    private String pendingDownloadUserAgent;
-    private String pendingDownloadContentDisposition;
-    private String pendingDownloadMimeType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,9 +52,7 @@ public class MainActivity extends Activity {
         setupLayout();
         setupWebView();
 
-        if (savedInstanceState != null) {
-            webView.restoreState(savedInstanceState);
-        } else if (isOnline()) {
+        if (isOnline()) {
             webView.loadUrl(ABIS_URL);
         } else {
             showOfflineView();
@@ -91,58 +81,11 @@ public class MainActivity extends Activity {
 
         offlineView = buildOfflineView();
         offlineView.setVisibility(View.GONE);
-        loadingView = buildLoadingView();
 
         root.addView(webView);
-        root.addView(loadingView);
         root.addView(progressBar);
         root.addView(offlineView);
         setContentView(root);
-    }
-
-    private LinearLayout buildLoadingView() {
-        LinearLayout view = new LinearLayout(this);
-        view.setOrientation(LinearLayout.VERTICAL);
-        view.setGravity(Gravity.CENTER);
-        view.setPadding(dpToPx(28), dpToPx(28), dpToPx(28), dpToPx(28));
-        view.setBackgroundColor(Color.rgb(31, 41, 55));
-        view.setLayoutParams(new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-        ));
-
-        TextView badge = new TextView(this);
-        badge.setText("AB");
-        badge.setTextColor(Color.WHITE);
-        badge.setTextSize(28);
-        badge.setGravity(Gravity.CENTER);
-        badge.setTypeface(null, 1);
-        badge.setBackgroundColor(Color.rgb(59, 130, 246));
-        LinearLayout.LayoutParams badgeParams = new LinearLayout.LayoutParams(dpToPx(72), dpToPx(72));
-        badgeParams.setMargins(0, 0, 0, dpToPx(18));
-
-        TextView title = new TextView(this);
-        title.setText("ABIS");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(30);
-        title.setGravity(Gravity.CENTER);
-        title.setTypeface(null, 1);
-
-        TextView subtitle = new TextView(this);
-        subtitle.setText("AllWorkss Business Intelligence Suite");
-        subtitle.setTextColor(Color.rgb(209, 213, 219));
-        subtitle.setTextSize(15);
-        subtitle.setGravity(Gravity.CENTER);
-        subtitle.setPadding(0, dpToPx(8), 0, dpToPx(24));
-
-        ProgressBar spinner = new ProgressBar(this);
-        spinner.setIndeterminate(true);
-
-        view.addView(badge, badgeParams);
-        view.addView(title);
-        view.addView(subtitle);
-        view.addView(spinner);
-        return view;
     }
 
     private LinearLayout buildOfflineView() {
@@ -176,9 +119,6 @@ public class MainActivity extends Activity {
         retry.setOnClickListener(v -> {
             if (isOnline()) {
                 offlineView.setVisibility(View.GONE);
-                if (loadingView != null) {
-                    loadingView.setVisibility(View.VISIBLE);
-                }
                 webView.setVisibility(View.VISIBLE);
                 webView.loadUrl(ABIS_URL);
             } else {
@@ -211,11 +151,6 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setGeolocationEnabled(false);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            settings.setSafeBrowsingEnabled(true);
-        }
 
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
@@ -227,22 +162,6 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return handleUrl(request.getUrl());
-            }
-
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                return handleUrl(Uri.parse(url));
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                if (isOnline()) {
-                    offlineView.setVisibility(View.GONE);
-                    if (loadingView != null) {
-                        loadingView.setVisibility(View.GONE);
-                    }
-                    webView.setVisibility(View.VISIBLE);
-                }
             }
 
             @Override
@@ -258,9 +177,6 @@ public class MainActivity extends Activity {
             public void onProgressChanged(WebView view, int newProgress) {
                 progressBar.setProgress(newProgress);
                 progressBar.setVisibility(newProgress < 100 ? View.VISIBLE : View.GONE);
-                if (loadingView != null && newProgress >= 90) {
-                    loadingView.setVisibility(View.GONE);
-                }
             }
 
             @Override
@@ -285,19 +201,9 @@ public class MainActivity extends Activity {
     }
 
     private boolean handleUrl(Uri uri) {
-        String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
+        String scheme = uri.getScheme() == null ? "" : uri.getScheme();
         if (scheme.equals("http") || scheme.equals("https")) {
             return false;
-        }
-
-        if (scheme.equals("intent")) {
-            try {
-                Intent intent = Intent.parseUri(uri.toString(), Intent.URI_INTENT_SCHEME);
-                startActivity(intent);
-            } catch (Exception ignored) {
-                Toast.makeText(this, "Payment app not available", Toast.LENGTH_SHORT).show();
-            }
-            return true;
         }
 
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -310,44 +216,35 @@ public class MainActivity extends Activity {
     }
 
     private DownloadListener createDownloadListener() {
-        return (url, userAgent, contentDisposition, mimeType, contentLength) -> startDownload(url, userAgent, contentDisposition, mimeType);
-    }
+        return (url, userAgent, contentDisposition, mimeType, contentLength) -> {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+                    && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, STORAGE_PERMISSION_REQUEST);
+                Toast.makeText(this, "Please allow storage permission, then tap download again", Toast.LENGTH_LONG).show();
+                return;
+            }
 
-    private void startDownload(String url, String userAgent, String contentDisposition, String mimeType) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
-                && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            pendingDownloadUrl = url;
-            pendingDownloadUserAgent = userAgent;
-            pendingDownloadContentDisposition = contentDisposition;
-            pendingDownloadMimeType = mimeType;
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, STORAGE_PERMISSION_REQUEST);
-            Toast.makeText(this, "Please allow storage permission to download ABIS reports", Toast.LENGTH_LONG).show();
-            return;
-        }
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+            String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
+            request.setMimeType(mimeType);
+            request.addRequestHeader("User-Agent", userAgent);
+            request.addRequestHeader("Cookie", CookieManager.getInstance().getCookie(url));
+            request.setTitle(fileName);
+            request.setDescription("Downloading ABIS report");
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-        String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
-        request.setMimeType(mimeType);
-        request.addRequestHeader("User-Agent", userAgent);
-        request.addRequestHeader("Cookie", CookieManager.getInstance().getCookie(url));
-        request.setTitle(fileName);
-        request.setDescription("Downloading ABIS report");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
-
-        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        if (manager != null) {
-            manager.enqueue(request);
-            Toast.makeText(this, "Report download started", Toast.LENGTH_SHORT).show();
-        }
+            DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            if (manager != null) {
+                manager.enqueue(request);
+                Toast.makeText(this, "Report download started", Toast.LENGTH_SHORT).show();
+            }
+        };
     }
 
     private void showOfflineView() {
         webView.setVisibility(View.GONE);
         offlineView.setVisibility(View.VISIBLE);
-        if (loadingView != null) {
-            loadingView.setVisibility(View.GONE);
-        }
         progressBar.setVisibility(View.GONE);
     }
 
@@ -372,58 +269,8 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if (webView != null) {
-            webView.saveState(outState);
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (offlineView != null && offlineView.getVisibility() == View.VISIBLE && isOnline()) {
-            offlineView.setVisibility(View.GONE);
-            if (loadingView != null) {
-                loadingView.setVisibility(View.VISIBLE);
-            }
-            webView.setVisibility(View.VISIBLE);
-            webView.loadUrl(ABIS_URL);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == STORAGE_PERMISSION_REQUEST
-                && grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                && pendingDownloadUrl != null) {
-            startDownload(pendingDownloadUrl, pendingDownloadUserAgent, pendingDownloadContentDisposition, pendingDownloadMimeType);
-            pendingDownloadUrl = null;
-            pendingDownloadUserAgent = null;
-            pendingDownloadContentDisposition = null;
-            pendingDownloadMimeType = null;
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        if (filePathCallback != null) {
-            filePathCallback.onReceiveValue(null);
-            filePathCallback = null;
-        }
-        super.onDestroy();
-    }
-
-    @Override
     public void onBackPressed() {
         if (webView != null && webView.canGoBack()) {
-            WebBackForwardList history = webView.copyBackForwardList();
-            if (history.getCurrentIndex() <= 0) {
-                super.onBackPressed();
-                return;
-            }
             webView.goBack();
         } else {
             super.onBackPressed();
